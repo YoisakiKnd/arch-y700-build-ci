@@ -19,7 +19,7 @@ echo "86ea0190e3a073a8ce94e1d6f74dcc3482457a0b9161c2ff968aaeb0f1147188  $work/ba
 mkdir "$work/base" "$work/build"
 tar -xzf "$work/base.tar.gz" -C "$work/base"
 cd "$work/linux"
-echo '898b30758a58862df84974e8cd5a367f8a1fbf277d5b6c8b23483ad4480fea9d  drivers/gpu/drm/panel/panel-novatek-nt36523.c' | sha256sum -c -
+echo '9a0b46716f3afc3e7e8379a433010ad5d4f4280a5dd78d80b78ab8ec48a00906  drivers/gpu/drm/panel/panel-novatek-nt36523.c' | sha256sum -c -
 # The vendor DTS has mixed line endings; normalize before applying a unified diff.
 python3 - <<'PY'
 from pathlib import Path

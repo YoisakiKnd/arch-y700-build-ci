@@ -36,21 +36,23 @@ to flash image or a claim that every peripheral works with this backport.
 
 ## 在你的 fork 上运行
 
-Mac 的 GitHub CLI 已确认登录 `YoisakiKnd` 并拥有此 fork 的写权限。
-`codex/tb321fu-boe` 分支中对本方案文件的推送会自动构建；无需经过
-Windows 复制文件。原有 main 分支及原有构建流程保持不变。
+1. 合并到 `main` 后，打开 Actions → **Build TB321FU BOE compatible images** →
+   **Run workflow**，选择 `main`，再次点击 **Run workflow**。
+   没有输入项，不需要重新填写密码。
+2. Mac / Linux 命令行也可以触发：
 
-手动安装 workflow 时也可以使用以下方式：
+   ```sh
+   gh workflow run build-boe-compatible-images.yml --repo YoisakiKnd/arch-y700-build-ci --ref main
+   ```
 
-1. 在 `YoisakiKnd/arch-y700-build-ci` 的仓库根目录上传本补丁包中的
-   `.github/`、`scripts/` 和 `source/` 三个目录，保留完整目录层级。
-   本补丁包只增加五个文件，不替换原有 workflow。
-2. 提交后，打开 Actions → **Build TB321FU BOE compatible images** →
-   **Run workflow**。没有密码输入项，也不会发布 Release。
 3. `kernel` 作业先构建成套设备层；`images` 作业再下载原 Arch 附件、
    校验、更新副本并压缩。
 4. 成功后保存 `tb321fu-boe-kernel` 和
    `TB321FU-archlinuxarm-plasma-aarch64-BOE-images` 两个附件。
+
+`codex/tb321fu-boe` 分支对本方案文件的推送也会自动构建。
+本流程只上传 Actions 附件，不发布 Release；原有 CSOT 构建 workflow 仍保留。
+目前固定复用此 fork 的原构建 `40177430328`，需要其附件尚未过期。
 
 如果编译或镜像检查失败，请保留日志并修复后再继续。新产物仍需校验和
 实机测试；请勿将原 CSOT 镜像和新 BOE 镜像混用。
