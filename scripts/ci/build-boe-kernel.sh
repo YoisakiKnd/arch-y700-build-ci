@@ -6,6 +6,12 @@ work=${BOE_WORK_DIR:-"$repo/out/boe-work"}
 out=${BOE_OUTPUT_DIR:-"$repo/out/boe-kernel"}
 base=5df8e852ea722929f5359a5ef28ebcec0c4443fd
 haptics=f25d3a29d83a3c8a2f63bcc56306818e5973f994
+profile=${BOE_KERNEL_PROFILE:-boe1}
+case "$profile" in
+  boe1) localversion=-tb321fu-boe1 ;;
+  mobile) localversion=-tb321fu-boe2 ;;
+  *) echo "Unsupported BOE kernel profile: $profile" >&2; exit 1 ;;
+esac
 mkdir -p "$work" "$out"
 work=$(cd "$work" && pwd -P)
 out=$(cd "$out" && pwd -P)
@@ -30,10 +36,18 @@ patch --dry-run -p1 < "$repo/source/boe/0001-tb321fu-add-boe-panel.patch"
 patch -p1 < "$repo/source/boe/0001-tb321fu-add-boe-panel.patch"
 cp "$work/base/kernel.config" "$work/build/.config"
 export LOCALVERSION=
-scripts/config --file "$work/build/.config" --set-str LOCALVERSION '-tb321fu-boe1' --disable LOCALVERSION_AUTO --disable DEBUG_INFO --enable DEBUG_INFO_NONE
+scripts/config --file "$work/build/.config" --set-str LOCALVERSION "$localversion" --disable LOCALVERSION_AUTO --disable DEBUG_INFO --enable DEBUG_INFO_NONE
+if [ "$profile" = mobile ]; then
+  KCONFIG_CONFIG="$work/build/.config" scripts/kconfig/merge_config.sh -m \
+    "$work/build/.config" "$repo/source/boe/mobile-runtime.config"
+fi
 make O="$work/build" ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
+if [ "$profile" = mobile ]; then
+  python3 "$repo/scripts/ci/check-kernel-fragment.py" \
+    "$work/build/.config" "$repo/source/boe/mobile-runtime.config"
+fi
 release=$(make -s O="$work/build" ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- kernelrelease)
-test "$release" = '7.1.1-tb321fu-boe1'
+test "$release" = "7.1.1$localversion"
 make -j"$(nproc)" O="$work/build" ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- Image modules qcom/sm8650-lenovo-tb321fu.dtb
 stage="$work/modules"
 make O="$work/build" ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- INSTALL_MOD_PATH="$stage" INSTALL_MOD_STRIP=1 modules_install
@@ -74,4 +88,5 @@ grep -F 'novatek_ts_boe_fw.bin' "$out/compiled-device-tree.dts"
 tar -czf "$out/kernel-artifacts.tar.gz" -C "$out" Image sm8650-lenovo-tb321fu.dtb kernel.config kernel-release.txt
 tar -czf "$out/modules-overlay.tar.gz" -C "$out/overlay" .
 printf 'base_commit=%s\nhaptics_commit=%s\npanel=BOE\nkernel=%s\nhardware_tested=no\n' "$base" "$haptics" "$release" > "$out/BUILD-INFO.txt"
+printf 'kernel_profile=%s\n' "$profile" >> "$out/BUILD-INFO.txt"
 (cd "$out" && sha256sum Image sm8650-lenovo-tb321fu.dtb kernel.config kernel-artifacts.tar.gz modules-overlay.tar.gz BUILD-INFO.txt > SHA256SUMS.txt)

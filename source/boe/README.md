@@ -1,5 +1,23 @@
 # TB321FU BOE build preparation
 
+## Mobile runtime kernel candidate
+
+The separately triggered **Build TB321FU BOE mobile kernel candidate** workflow
+builds `7.1.1-tb321fu-boe2` with `BOE_KERNEL_PROFILE=mobile`. It adds Landlock,
+private Binderfs, uinput, nftables/NAT, EROFS compression and pressure-stall
+information while retaining the BOE1 device configuration. A guard rejects
+Kconfig results that drop required settings. The external haptics module and
+all kernel modules are rebuilt for the new release.
+
+This workflow produces only a kernel/module artifact for installation and
+hardware testing. It does not replace a running kernel or rebuild a rootfs.
+The existing BOE image workflow still uses the BOE1 profile. Keep BOE1 available
+until the candidate has passed tablet testing. The original BOE1 kernel has
+booted Plasma on the owner's TB321FU with working touch, Wi-Fi, sound and
+charging; BOE2 has not yet been tested.
+
+The older preparation notes below describe the original BOE1 backport.
+
 This is an uncompiled, untested BOE backport, prepared after the actual tablet's
 Android bugreport reported:
 
