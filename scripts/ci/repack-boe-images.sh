@@ -44,6 +44,11 @@ test "$(stat -c %s "$work/raw/$prefix-grub-fat.img")" = 268435456
 test "$(stat -c %s "$work/raw/boot.img")" = 100663296
 mount -o loop "$work/raw/$prefix-rootfs.img" "$work/root"
 mounted=1
+# The source image's filesystem root may belong to its desktop user. Keep
+# Android storage ancestors protected without changing ownership recursively.
+chown 0:0 "$work/root"
+test "$(stat -c %u:%g "$work/root")" = 0:0
+test "$((8#$(stat -c %a "$work/root") & 0022))" -eq 0
 tar -xzf "$kernel/modules-overlay.tar.gz" -C "$work/root"
 depmod -b "$work/root" "$release"
 test -f "$work/root/usr/lib/modules/$release/extra/aw86937-haptics.ko"

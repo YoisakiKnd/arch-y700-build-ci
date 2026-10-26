@@ -10,6 +10,7 @@ profile=${BOE_KERNEL_PROFILE:-boe1}
 case "$profile" in
   boe1) localversion=-tb321fu-boe1 ;;
   mobile) localversion=-tb321fu-boe2 ;;
+  mobile-routing) localversion=-tb321fu-boe3 ;;
   *) echo "Unsupported BOE kernel profile: $profile" >&2; exit 1 ;;
 esac
 mkdir -p "$work" "$out"
@@ -37,14 +38,22 @@ patch -p1 < "$repo/source/boe/0001-tb321fu-add-boe-panel.patch"
 cp "$work/base/kernel.config" "$work/build/.config"
 export LOCALVERSION=
 scripts/config --file "$work/build/.config" --set-str LOCALVERSION "$localversion" --disable LOCALVERSION_AUTO --disable DEBUG_INFO --enable DEBUG_INFO_NONE
-if [ "$profile" = mobile ]; then
+if [[ "$profile" = mobile || "$profile" = mobile-routing ]]; then
   KCONFIG_CONFIG="$work/build/.config" scripts/kconfig/merge_config.sh -m \
     "$work/build/.config" "$repo/source/boe/mobile-runtime.config"
 fi
+if [ "$profile" = mobile-routing ]; then
+  KCONFIG_CONFIG="$work/build/.config" scripts/kconfig/merge_config.sh -m \
+    "$work/build/.config" "$repo/source/boe/mobile-routing.config"
+fi
 make O="$work/build" ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
-if [ "$profile" = mobile ]; then
+if [[ "$profile" = mobile || "$profile" = mobile-routing ]]; then
   python3 "$repo/scripts/ci/check-kernel-fragment.py" \
     "$work/build/.config" "$repo/source/boe/mobile-runtime.config"
+fi
+if [ "$profile" = mobile-routing ]; then
+  python3 "$repo/scripts/ci/check-kernel-fragment.py" \
+    "$work/build/.config" "$repo/source/boe/mobile-routing.config"
 fi
 release=$(make -s O="$work/build" ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- kernelrelease)
 test "$release" = "7.1.1$localversion"

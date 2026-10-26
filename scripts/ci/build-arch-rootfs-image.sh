@@ -1133,6 +1133,11 @@ rm -f \
   "$rootfs_dir/SHA256SUMS.txt" \
   "$rootfs_dir/Y700-ROOTFS-OVERLAY-MANIFEST.tsv"
 
+# Normalize the image root itself after overlays; never chown user homes or
+# system files recursively. Droidloom rejects user-owned storage ancestors.
+chown 0:0 "$rootfs_dir"
+test "$(stat -c %u:%g "$rootfs_dir")" = 0:0
+test "$((8#$(stat -c %a "$rootfs_dir") & 0022))" -eq 0
 verify_required_y700_payload "$rootfs_dir"
 
 cat > "$build_info" <<INFO

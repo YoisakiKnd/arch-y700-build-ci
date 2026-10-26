@@ -27,13 +27,13 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu make bc bison flex libssl-dev libelf-dev kmod python3 device-tree-compiler patch curl
-      - name: Build BOE2 kernel and matching modules
+      - name: Build BOE3 kernel and matching modules
         env:
-          BOE_KERNEL_PROFILE: mobile
+          BOE_KERNEL_PROFILE: mobile-routing
         run: bash scripts/ci/build-boe-kernel.sh
       - uses: actions/upload-artifact@v4
         with:
-          name: tb321fu-boe2-mobile-kernel
+          name: tb321fu-boe3-mobile-kernel
           path: |
             out/boe-kernel/*.tar.gz
             out/boe-kernel/*.txt
